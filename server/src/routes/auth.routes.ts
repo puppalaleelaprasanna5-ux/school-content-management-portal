@@ -1,10 +1,19 @@
 import { Router } from "express";
-import { activateSchool, login, me } from "../controllers/auth.controller.js";
+
+import {
+  activateSchool,
+  login,
+  me,
+} from "../controllers/auth.controller.js";
+
+import { authenticate } from "../middleware/auth.middleware.js";
 
 const router = Router();
 
 router.post("/activate", activateSchool);
+
 router.post("/login", login);
-router.get("/me", me);
+
+router.get("/me", authenticate, me);
 
 export default router;

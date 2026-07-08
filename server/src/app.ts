@@ -9,12 +9,13 @@ dotenv.config();
 const app = express();
 
 app.use(cors());
-app.use(express.json());
 
-app.use("/api/auth", authRoutes);
+app.use(express.json());
 
 app.get("/", (_req, res) => {
   res.send("🚀 School CMS Backend Running");
 });
+
+app.use("/api/auth", authRoutes);
 
 export default app;
