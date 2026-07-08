@@ -27,6 +27,7 @@ model School {
 
   users           User[]
   grades          Grade[]
+  folders         Folder[]
   activationCodes ActivationCode[]
 }
 
@@ -37,105 +38,117 @@ model ActivationCode {
   used      Boolean   @default(false)
   usedAt    DateTime?
 
-  schoolId String
-  school   School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  schoolId  String
+  school    School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
 }
 
 model User {
-  id       String @id @default(cuid())
-  name     String
-  email    String @unique
-  password String
-  role     Role
+  id         String   @id @default(cuid())
+  name       String
+  email      String   @unique
+  password   String
+  role       Role
 
-  schoolId String
-  school   School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  schoolId   String
+  school     School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
 
-  gradeId String?
-  grade   Grade?  @relation(fields: [gradeId], references: [id], onDelete: SetNull)
+  gradeId    String?
+  grade      Grade?   @relation(fields: [gradeId], references: [id], onDelete: SetNull)
 
-  classId String?
-  class   ClassSection? @relation(fields: [classId], references: [id], onDelete: SetNull)
+  classId    String?
+  class      ClassSection? @relation(fields: [classId], references: [id], onDelete: SetNull)
 
-  folders       Folder[]
-  contents      Content[]
-  assignments   StaffAssignment[]
+  folders     Folder[]
+  contents    Content[]
+  assignments StaffAssignment[]
 
   createdAt DateTime @default(now())
 }
 
 model Grade {
-  id   String @id @default(cuid())
-  name String
+  id        String @id @default(cuid())
+  name      String
 
-  schoolId String
-  school   School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  schoolId  String
+  school    School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
 
-  classes ClassSection[]
-  folders Folder[]
-  users   User[]
+  classes   ClassSection[]
+  folders   Folder[]
+  users     User[]
+
+  @@unique([schoolId, name])
 }
 
 model ClassSection {
-  id   String @id @default(cuid())
-  name String
+  id        String @id @default(cuid())
+  name      String
 
-  gradeId String
-  grade   Grade  @relation(fields: [gradeId], references: [id], onDelete: Cascade)
+  gradeId   String
+  grade     Grade @relation(fields: [gradeId], references: [id], onDelete: Cascade)
 
   users       User[]
   folders     Folder[]
   assignments StaffAssignment[]
+
+  @@unique([gradeId, name])
 }
 
 model Folder {
-  id   String @id @default(cuid())
-  name String
+  id          String @id @default(cuid())
+  name        String
 
-  parentId String?
-  parent   Folder?  @relation("FolderHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
-  children Folder[] @relation("FolderHierarchy")
+  parentId    String?
+  parent      Folder? @relation("FolderHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children    Folder[] @relation("FolderHierarchy")
 
-  gradeId String?
-  grade   Grade?  @relation(fields: [gradeId], references: [id], onDelete: SetNull)
+  schoolId    String
+  school      School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
 
-  classId String?
-  class   ClassSection? @relation(fields: [classId], references: [id], onDelete: SetNull)
+  gradeId     String?
+  grade       Grade? @relation(fields: [gradeId], references: [id], onDelete: SetNull)
+
+  classId     String?
+  class       ClassSection? @relation(fields: [classId], references: [id], onDelete: SetNull)
 
   createdById String
-  createdBy   User   @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  createdBy   User @relation(fields: [createdById], references: [id], onDelete: Cascade)
 
-  contents Content[]
+  contents    Content[]
 
-  createdAt DateTime @default(now())
+  createdAt   DateTime @default(now())
 }
 
 model Content {
-  id          String      @id @default(cuid())
-  title       String
-  description String?
-  type        ContentType
+  id           String @id @default(cuid())
 
-  fileUrl     String?
-  textContent String?
+  title        String
+  description  String?
 
-  published Boolean @default(true)
+  type         ContentType
 
-  folderId String
-  folder   Folder @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  filePath     String?
+  textContent  String?
+
+  published    Boolean @default(true)
+  publishedAt  DateTime?
+
+  folderId     String
+  folder        Folder @relation(fields: [folderId], references: [id], onDelete: Cascade)
 
   uploadedById String
-  uploadedBy   User   @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
+  uploadedBy   User @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
 
-  createdAt DateTime @default(now())
+  createdAt    DateTime @default(now())
 }
 
 model StaffAssignment {
-  id        String       @id @default(cuid())
-  userId    String
-  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  classId   String
-  class     ClassSection @relation(fields: [classId], references: [id], onDelete: Cascade)
+  id          String @id @default(cuid())
 
-  assignedAt DateTime @default(now())
+  userId      String
+  user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  classId     String
+  class       ClassSection @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  assignedAt  DateTime @default(now())
 }
