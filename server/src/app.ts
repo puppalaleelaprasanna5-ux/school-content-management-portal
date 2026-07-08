@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import authRoutes from "./routes/auth.routes.js";
 import gradeRoutes from "./routes/grade.routes.js";
 import classRoutes from "./routes/class.routes.js";
+import folderRoutes from "./routes/folder.routes.js";
 
 dotenv.config();
 
@@ -20,5 +21,6 @@ app.get("/", (_req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/grades", gradeRoutes);
 app.use("/api/classes", classRoutes);
+app.use("/api/folders", folderRoutes);
 
 export default app;
