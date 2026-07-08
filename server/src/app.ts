@@ -3,13 +3,14 @@ import cors from "cors";
 import dotenv from "dotenv";
 
 import authRoutes from "./routes/auth.routes.js";
+import gradeRoutes from "./routes/grade.routes.js";
+import classRoutes from "./routes/class.routes.js";
 
 dotenv.config();
 
 const app = express();
 
 app.use(cors());
-
 app.use(express.json());
 
 app.get("/", (_req, res) => {
@@ -17,5 +18,7 @@ app.get("/", (_req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/grades", gradeRoutes);
+app.use("/api/classes", classRoutes);
 
 export default app;
