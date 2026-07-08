@@ -1,0 +1,141 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  STAFF
+  STUDENT
+}
+
+enum ContentType {
+  PDF
+  VIDEO
+  TEXT
+}
+
+model School {
+  id        String   @id @default(cuid())
+  name      String
+  isActive  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  users           User[]
+  grades          Grade[]
+  activationCodes ActivationCode[]
+}
+
+model ActivationCode {
+  id        String    @id @default(cuid())
+  code      String    @unique
+  expiresAt DateTime
+  used      Boolean   @default(false)
+  usedAt    DateTime?
+
+  schoolId String
+  school   School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id       String @id @default(cuid())
+  name     String
+  email    String @unique
+  password String
+  role     Role
+
+  schoolId String
+  school   School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  gradeId String?
+  grade   Grade?  @relation(fields: [gradeId], references: [id], onDelete: SetNull)
+
+  classId String?
+  class   ClassSection? @relation(fields: [classId], references: [id], onDelete: SetNull)
+
+  folders       Folder[]
+  contents      Content[]
+  assignments   StaffAssignment[]
+
+  createdAt DateTime @default(now())
+}
+
+model Grade {
+  id   String @id @default(cuid())
+  name String
+
+  schoolId String
+  school   School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  classes ClassSection[]
+  folders Folder[]
+  users   User[]
+}
+
+model ClassSection {
+  id   String @id @default(cuid())
+  name String
+
+  gradeId String
+  grade   Grade  @relation(fields: [gradeId], references: [id], onDelete: Cascade)
+
+  users       User[]
+  folders     Folder[]
+  assignments StaffAssignment[]
+}
+
+model Folder {
+  id   String @id @default(cuid())
+  name String
+
+  parentId String?
+  parent   Folder?  @relation("FolderHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children Folder[] @relation("FolderHierarchy")
+
+  gradeId String?
+  grade   Grade?  @relation(fields: [gradeId], references: [id], onDelete: SetNull)
+
+  classId String?
+  class   ClassSection? @relation(fields: [classId], references: [id], onDelete: SetNull)
+
+  createdById String
+  createdBy   User   @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  contents Content[]
+
+  createdAt DateTime @default(now())
+}
+
+model Content {
+  id          String      @id @default(cuid())
+  title       String
+  description String?
+  type        ContentType
+
+  fileUrl     String?
+  textContent String?
+
+  published Boolean @default(true)
+
+  folderId String
+  folder   Folder @relation(fields: [folderId], references: [id], onDelete: Cascade)
+
+  uploadedById String
+  uploadedBy   User   @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+}
+
+model StaffAssignment {
+  id        String       @id @default(cuid())
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  classId   String
+  class     ClassSection @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  assignedAt DateTime @default(now())
+}
