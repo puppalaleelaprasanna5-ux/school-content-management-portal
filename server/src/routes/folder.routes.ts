@@ -6,8 +6,8 @@ import {
   getFolderById,
   updateFolder,
   deleteFolder,
+  getFolderTree,
 } from "../controllers/folder.controller.js";
-
 import { authenticate } from "../middleware/auth.middleware.js";
 import { authorize } from "../middleware/role.middleware.js";
 
@@ -23,6 +23,8 @@ router.post(
 
 // Get All Folders
 router.get("/", authenticate, getFolders);
+
+router.get("/tree", authenticate, getFolderTree);
 
 // Get Folder By ID
 router.get("/:id", authenticate, getFolderById);

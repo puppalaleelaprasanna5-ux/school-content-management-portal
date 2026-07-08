@@ -143,3 +143,32 @@ export const deleteFolderService = async (id: string) => {
     message: "Folder deleted successfully.",
   };
 };
+
+// Get Folder Tree
+export const getFolderTreeService = async () => {
+  const folders = await prisma.folder.findMany({
+    where: {
+      parentId: null,
+    },
+    include: {
+      children: {
+        include: {
+          children: {
+            include: {
+              children: true,
+            },
+          },
+        },
+      },
+      contents: true,
+    },
+    orderBy: {
+      createdAt: "asc",
+    },
+  });
+
+  return {
+    success: true,
+    data: folders,
+  };
+};

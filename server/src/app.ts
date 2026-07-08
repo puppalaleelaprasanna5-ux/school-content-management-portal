@@ -6,6 +6,7 @@ import authRoutes from "./routes/auth.routes.js";
 import gradeRoutes from "./routes/grade.routes.js";
 import classRoutes from "./routes/class.routes.js";
 import folderRoutes from "./routes/folder.routes.js";
+import contentRoutes from "./routes/content.routes.js";
 
 dotenv.config();
 
@@ -22,5 +23,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/grades", gradeRoutes);
 app.use("/api/classes", classRoutes);
 app.use("/api/folders", folderRoutes);
+app.use("/api/content", contentRoutes);
+
+app.use("/uploads", express.static("uploads"));
 
 export default app;

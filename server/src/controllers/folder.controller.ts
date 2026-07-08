@@ -6,6 +6,7 @@ import {
   getFolderByIdService,
   updateFolderService,
   deleteFolderService,
+  getFolderTreeService,
 } from "../services/folder.service.js";
 
 // Create Folder
@@ -53,6 +54,22 @@ export const getFolderById = async (
     res.status(200).json(result);
   } catch (error: any) {
     res.status(404).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const getFolderTree = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const result = await getFolderTreeService();
+
+    res.status(200).json(result);
+  } catch (error: any) {
+    res.status(500).json({
       success: false,
       message: error.message,
     });
