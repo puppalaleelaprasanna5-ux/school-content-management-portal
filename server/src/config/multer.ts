@@ -15,7 +15,7 @@ if (!fs.existsSync(videoDir)) {
 }
 
 const storage = multer.diskStorage({
-  destination(req, file, cb) {
+  destination(_req, file, cb) {
     if (file.mimetype === "application/pdf") {
       cb(null, pdfDir);
     } else {
@@ -23,7 +23,7 @@ const storage = multer.diskStorage({
     }
   },
 
-  filename(req, file, cb) {
+  filename(_req, file, cb) {
     const uniqueName =
       Date.now() +
       "-" +
@@ -37,7 +37,7 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter: multer.Options["fileFilter"] = (
-  req,
+  _req,
   file,
   cb
 ) => {

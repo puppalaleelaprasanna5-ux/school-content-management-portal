@@ -106,9 +106,12 @@ export const getContentByIdService = async (
 // Update Text Content
 export const updateContentService = async (
   id: string,
-  title: string,
-  description: string,
-  textContent: string
+  data: {
+    title?: string;
+    description?: string;
+    textContent?: string;
+    filePath?: string;
+  }
 ) => {
   const existing = await prisma.content.findUnique({
     where: {
@@ -125,9 +128,10 @@ export const updateContentService = async (
       id,
     },
     data: {
-      title,
-      description,
-      textContent,
+      ...(data.title && { title: data.title }),
+      ...(data.description && { description: data.description }),
+      ...(data.textContent && { textContent: data.textContent }),
+      ...(data.filePath && { filePath: data.filePath }),
     },
   });
 

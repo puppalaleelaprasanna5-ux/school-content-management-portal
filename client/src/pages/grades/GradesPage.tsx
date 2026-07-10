@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo } from "react";
-import { Plus, Pencil, Trash2, Search, Layers, Inbox, ArrowUpDown } from "lucide-react";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { Plus, Pencil, Trash2, Layers, Inbox, ArrowUpDown } from "lucide-react";
 import clsx from "clsx";
 
 import api from "../../services/api";
@@ -7,6 +7,9 @@ import Table from "../../components/ui/Table";
 import Modal from "../../components/ui/Modal";
 import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
+import PageHeader from "../../components/ui/PageHeader";
+import EmptyState from "../../components/ui/EmptyState";
+import SearchBox from "../../components/ui/SearchBox";
 import { useAuth } from "../../context/AuthContext";
 
 interface Grade {
@@ -38,12 +41,7 @@ export default function GradesPage() {
   const [deleteConfirm, setDeleteConfirm] = useState<Grade | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  // Fetch data
-  useEffect(() => {
-    fetchGrades();
-  }, []);
-
-  const fetchGrades = async () => {
+  const fetchGrades = useCallback(async () => {
     try {
       const res = await api.get("/grades");
       setGrades(res.data.data || []);
@@ -52,9 +50,12 @@ export default function GradesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  // Filter and sort grades
+  useEffect(() => {
+    fetchGrades();
+  }, [fetchGrades]);
+
   const filteredGrades = useMemo(() => {
     let result = grades.filter((grade) =>
       grade.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -70,7 +71,6 @@ export default function GradesPage() {
     return result;
   }, [grades, searchQuery, sortField, sortDirection]);
 
-  // Open modal for add/edit
   const openModal = (grade: Grade | null = null) => {
     if (grade) {
       setEditingGrade(grade);
@@ -88,7 +88,6 @@ export default function GradesPage() {
     setFormData({ name: "" });
   };
 
-  // Handle form submit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim()) return;
@@ -109,7 +108,6 @@ export default function GradesPage() {
     }
   };
 
-  // Handle delete
   const handleDelete = async () => {
     if (!deleteConfirm) return;
 
@@ -125,7 +123,6 @@ export default function GradesPage() {
     }
   };
 
-  // Handle sort
   const handleSort = (field: "name") => {
     if (sortField === field) {
       setSortDirection(sortDirection === "asc" ? "desc" : "asc");
@@ -135,7 +132,6 @@ export default function GradesPage() {
     }
   };
 
-  // Table columns
   const columns = [
     {
       key: "name",
@@ -143,7 +139,7 @@ export default function GradesPage() {
         <button
           type="button"
           onClick={() => handleSort("name")}
-          className="flex items-center gap-2 hover:text-slate-700 transition-colors"
+          className="flex items-center gap-2 transition-colors hover:text-slate-700"
         >
           Grade Name
           {sortField === "name" && (
@@ -153,7 +149,7 @@ export default function GradesPage() {
       ),
       cell: (item: Grade) => (
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-50 text-violet-600">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
             <Layers size={18} strokeWidth={1.75} />
           </div>
           <span className="font-medium text-slate-900">{item.name}</span>
@@ -163,108 +159,76 @@ export default function GradesPage() {
     {
       key: "actions",
       header: "",
-      cell: (item: Grade) => (
-        <div className="flex items-center gap-2">
-          {isAdmin && (
-            <>
-              <button
-                type="button"
-                onClick={() => openModal(item)}
-                className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
-                aria-label="Edit grade"
-              >
-                <Pencil size={16} />
-              </button>
-              <button
-                type="button"
-                onClick={() => setDeleteConfirm(item)}
-                className="rounded-lg p-1.5 text-slate-400 transition hover:bg-red-50 hover:text-red-600"
-                aria-label="Delete grade"
-              >
-                <Trash2 size={16} />
-              </button>
-            </>
-          )}
-        </div>
-      ),
+      cell: (item: Grade) =>
+        isAdmin ? (
+          <div className="flex items-center justify-end gap-1">
+            <button
+              type="button"
+              onClick={() => openModal(item)}
+              className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+              aria-label={`Edit ${item.name}`}
+            >
+              <Pencil size={16} />
+            </button>
+            <button
+              type="button"
+              onClick={() => setDeleteConfirm(item)}
+              className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
+              aria-label={`Delete ${item.name}`}
+            >
+              <Trash2 size={16} />
+            </button>
+          </div>
+        ) : null,
       className: "text-right",
     },
   ];
 
-  // Empty state
   const emptyState = (
-    <div className="flex flex-col items-center justify-center py-14 text-center">
-      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 text-slate-400">
-        <Inbox size={22} />
-      </div>
-      <p className="mt-4 text-sm font-medium text-slate-900">No grades found</p>
-      <p className="mt-1 max-w-xs text-sm text-slate-500">
-        {searchQuery
-          ? "Try adjusting your search"
+    <EmptyState
+      icon={Inbox}
+      title="No grades found"
+      description={
+        searchQuery
+          ? "Try adjusting your search."
           : isAdmin
-          ? "Create your first grade to get started"
-          : "No grades have been added yet"}
-      </p>
-      {isAdmin && !searchQuery && (
-        <button
-          type="button"
-          onClick={() => openModal()}
-          className="mt-5 inline-flex items-center gap-1 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-700"
-        >
-          <Plus size={16} />
-          Add grade
-        </button>
-      )}
-    </div>
+          ? "Create your first grade to get started."
+          : "No grades have been added yet."
+      }
+      action={
+        isAdmin && !searchQuery ? (
+          <Button type="button" onClick={() => openModal()}>
+            <Plus size={18} />
+            Add grade
+          </Button>
+        ) : undefined
+      }
+    />
   );
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6">
-      {/* Header */}
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
-            Grades
-          </h2>
-          <p className="mt-2 text-sm text-slate-500">
-            Manage grade levels for your school
-          </p>
-        </div>
-
-        {isAdmin && (
-          <Button
-            type="button"
-            onClick={() => openModal()}
-            className="!h-10 !w-auto !px-4 sm:!h-12 sm:!px-5"
-          >
-            <Plus size={18} className="mr-2" />
-            Add Grade
-          </Button>
-        )}
-      </header>
-
-      {/* Search */}
-      <div className="relative max-w-sm">
-        <Search
-          size={16}
-          className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
-        />
-        <input
-          type="search"
-          placeholder="Search grades..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50/80 pl-10 pr-4 text-sm text-slate-700 placeholder:text-slate-400 transition focus:border-indigo-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-100"
-        />
-      </div>
-
-      {/* Table */}
-      <Table
-        columns={columns}
-        data={filteredGrades}
-        emptyState={emptyState}
-        loading={loading}
+      <PageHeader
+        title="Grades"
+        subtitle="Manage grade levels for your school"
+        actions={
+          isAdmin && (
+            <Button type="button" onClick={() => openModal()}>
+              <Plus size={18} />
+              Add Grade
+            </Button>
+          )
+        }
       />
+
+      <SearchBox
+        value={searchQuery}
+        onChange={setSearchQuery}
+        placeholder="Search grades…"
+        className="w-full sm:max-w-sm"
+      />
+
+      <Table columns={columns} data={filteredGrades} emptyState={emptyState} loading={loading} />
 
       {/* Add/Edit Modal */}
       <Modal
@@ -274,25 +238,16 @@ export default function GradesPage() {
         size="sm"
         footer={
           <>
-            <button
-              type="button"
-              onClick={closeModal}
-              className="rounded-xl px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100"
-            >
+            <Button type="button" onClick={closeModal} variant="secondary" size="sm">
               Cancel
-            </button>
-            <Button
-              type="submit"
-              onClick={handleSubmit}
-              loading={submitting}
-              className="!h-10 !w-auto !px-5"
-            >
+            </Button>
+            <Button type="submit" onClick={handleSubmit} loading={submitting} size="sm">
               {editingGrade ? "Save Changes" : "Create Grade"}
             </Button>
           </>
         }
       >
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label htmlFor="grade-name" className="mb-1.5 block text-sm font-medium text-slate-700">
               Grade Name
@@ -317,33 +272,23 @@ export default function GradesPage() {
         size="sm"
         footer={
           <>
-            <button
-              type="button"
-              onClick={() => setDeleteConfirm(null)}
-              className="rounded-xl px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100"
-            >
+            <Button type="button" onClick={() => setDeleteConfirm(null)} variant="secondary" size="sm">
               Cancel
-            </button>
-            <button
-              type="button"
-              onClick={handleDelete}
-              disabled={deleting}
-              className={clsx(
-                "flex h-10 items-center justify-center rounded-xl bg-red-600 px-5 text-sm font-medium text-white shadow-lg transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60",
-                deleting && "cursor-wait"
-              )}
-            >
-              {deleting ? "Deleting..." : "Delete"}
-            </button>
+            </Button>
+            <Button type="button" onClick={handleDelete} disabled={deleting} variant="danger" size="sm">
+              {deleting ? "Deleting…" : "Delete"}
+            </Button>
           </>
         }
       >
         <div className="space-y-3">
           <p className="text-sm text-slate-600">
-            Are you sure you want to delete <span className="font-semibold text-slate-900">{deleteConfirm?.name}</span>?
+            Are you sure you want to delete{" "}
+            <span className="font-semibold text-slate-900">{deleteConfirm?.name}</span>?
           </p>
           <p className="text-xs text-slate-500">
-            This action cannot be undone. All classes and content associated with this grade will also be affected.
+            This action cannot be undone. All classes and content associated with this grade will also
+            be affected.
           </p>
         </div>
       </Modal>

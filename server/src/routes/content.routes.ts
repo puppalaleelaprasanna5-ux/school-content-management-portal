@@ -31,6 +31,7 @@ router.put(
   "/:id",
   authenticate,
   authorize("ADMIN", "STAFF"),
+  upload.single("file"),
   updateContent
 );
 

@@ -1,85 +1,158 @@
-import { Menu, Bell, Search } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
+import { Menu, ChevronRight, LogOut, Settings, ChevronDown } from "lucide-react";
 
 import { useAuth } from "../../context/AuthContext";
+import NotificationBell from "./NotificationBell";
+import GlobalSearch from "./GlobalSearch";
 
 interface TopNavbarProps {
   onOpenMobileSidebar: () => void;
+  onLogout: () => void;
   title?: string;
 }
 
 export default function TopNavbar({
   onOpenMobileSidebar,
+  onLogout,
   title = "Dashboard",
 }: TopNavbarProps) {
   const { user } = useAuth();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
-  const initials = user?.name
-    ?.split(" ")
-    .map((part) => part[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
+  const initials =
+    user?.name
+      ?.split(" ")
+      .map((part) => part[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase() ?? "?";
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const isDashboardRoot = title === "Dashboard";
 
   return (
-    <header className="sticky top-0 z-30 shrink-0 border-b border-slate-200/80 bg-white/95 backdrop-blur-sm">
-      <div className="flex h-14 items-center gap-3 px-4 sm:gap-4 sm:px-5 lg:px-6">
-        <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
+    <header className="sticky top-0 z-30 shrink-0 border-b border-slate-200/70 bg-white/80 shadow-sm shadow-slate-200/40 backdrop-blur-xl supports-[backdrop-filter]:bg-white/70">
+      <div className="flex h-16 items-center gap-3 px-4 sm:gap-5 sm:px-6 lg:px-8">
+        {/* Left — mobile toggle + breadcrumb / page title */}
+        <div className="flex min-w-0 items-center gap-3">
           <button
             type="button"
             onClick={onOpenMobileSidebar}
-            className="rounded-xl p-2 text-slate-600 transition hover:bg-slate-100 md:hidden"
+            className="rounded-xl p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 md:hidden"
             aria-label="Open sidebar"
           >
             <Menu size={20} />
           </button>
 
           <div className="min-w-0">
-            <h1 className="truncate text-base font-semibold tracking-tight text-slate-900">
+            <nav
+              aria-label="Breadcrumb"
+              className="hidden items-center gap-1.5 text-xs font-medium text-slate-400 sm:flex"
+            >
+              <Link to="/dashboard" className="transition-colors hover:text-slate-600">
+                Dashboard
+              </Link>
+              {!isDashboardRoot && (
+                <>
+                  <ChevronRight size={12} className="text-slate-300" />
+                  <span className="text-slate-600">{title}</span>
+                </>
+              )}
+            </nav>
+            <h1 className="truncate text-base font-semibold tracking-tight text-slate-900 sm:text-lg">
               {title}
             </h1>
-            <p className="hidden truncate text-xs text-slate-500 sm:block">
-              School Content Management Portal
-            </p>
           </div>
         </div>
 
-        <div className="hidden min-w-0 flex-1 justify-center px-4 lg:flex">
-          <div className="relative w-full max-w-sm xl:max-w-md">
-            <Search
-              size={16}
-              className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
-            />
-            <input
-              type="search"
-              placeholder="Search content, folders..."
-              className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50/80 pl-10 pr-4 text-sm text-slate-700 placeholder:text-slate-400 transition focus:border-indigo-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-100"
-              readOnly
-              aria-label="Search"
-            />
+        {/* Center — search */}
+        <div className="hidden flex-1 justify-center px-4 lg:flex">
+          <div className="w-full max-w-[440px]">
+            <GlobalSearch />
           </div>
         </div>
 
-        <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-2.5">
-          <button
-            type="button"
-            className="rounded-xl p-2 text-slate-500 transition hover:bg-slate-100"
-            aria-label="Notifications"
-          >
-            <Bell size={18} />
-          </button>
+        {/* Right — notifications + avatar / profile dropdown */}
+        <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
+          <NotificationBell />
 
-          <div className="flex items-center gap-2.5 rounded-xl border border-slate-200/80 bg-white px-2.5 py-1.5 shadow-sm sm:gap-3 sm:px-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 text-xs font-semibold text-indigo-700">
-              {initials ?? "?"}
-            </div>
-            <div className="hidden min-w-0 sm:block">
-              <p className="truncate text-sm font-medium leading-tight text-slate-900">
-                {user?.name ?? "User"}
-              </p>
-              <p className="truncate text-xs capitalize text-slate-500">
-                {user?.role?.toLowerCase() ?? "member"}
-              </p>
-            </div>
+          <div className="mx-1 hidden h-6 w-px bg-slate-200 sm:block" />
+
+          <div className="relative" ref={menuRef}>
+            <button
+              type="button"
+              onClick={() => setMenuOpen((v) => !v)}
+              className="flex items-center gap-2 rounded-2xl p-1 pr-1.5 transition-colors hover:bg-slate-100 sm:pr-2.5"
+              aria-haspopup="menu"
+              aria-expanded={menuOpen}
+              aria-label="Open profile menu"
+            >
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 text-xs font-semibold text-white shadow-sm shadow-indigo-600/20">
+                {initials}
+              </div>
+              <div className="hidden min-w-0 text-left sm:block">
+                <p className="truncate text-sm font-semibold leading-tight text-slate-900">
+                  {user?.name ?? "User"}
+                </p>
+                <p className="truncate text-xs capitalize leading-tight text-slate-500">
+                  {user?.role?.toLowerCase() ?? "member"}
+                </p>
+              </div>
+              <ChevronDown
+                size={16}
+                className={`hidden text-slate-400 transition-transform duration-200 sm:block ${
+                  menuOpen ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+
+            {menuOpen && (
+              <div
+                role="menu"
+                className="absolute right-0 top-full z-50 mt-2 w-60 origin-top-right overflow-hidden rounded-2xl border border-slate-200 bg-white/95 shadow-xl shadow-slate-300/40 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150"
+              >
+                <div className="border-b border-slate-100 px-4 py-3">
+                  <p className="truncate text-sm font-semibold text-slate-900">
+                    {user?.name ?? "User"}
+                  </p>
+                  <p className="truncate text-xs text-slate-500">{user?.email ?? ""}</p>
+                </div>
+                <div className="p-1.5">
+                  <Link
+                    to="/dashboard/settings"
+                    onClick={() => setMenuOpen(false)}
+                    role="menuitem"
+                    className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
+                  >
+                    <Settings size={16} />
+                    Settings
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      onLogout();
+                    }}
+                    role="menuitem"
+                    className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
+                  >
+                    <LogOut size={16} />
+                    Logout
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

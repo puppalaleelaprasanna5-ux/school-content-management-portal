@@ -5,223 +5,247 @@ import {
   Layers,
   FolderOpen,
   FileText,
+  Users,
+  Settings,
   LogOut,
   X,
+  PanelLeftClose,
   PanelLeftOpen,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import clsx from "clsx";
 
-import Logo from "./Logo";
-import Button from "../ui/Button";
 import { useAuth } from "../../context/AuthContext";
 
-const navItems = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, end: true },
-  { to: "/dashboard/classes", label: "Classes", icon: GraduationCap },
-  { to: "/dashboard/grades", label: "Grades", icon: Layers },
-  { to: "/dashboard/folders", label: "Folders", icon: FolderOpen },
-  { to: "/dashboard/content", label: "Content", icon: FileText },
+interface NavItem {
+  to: string;
+  label: string;
+  icon: LucideIcon;
+  end?: boolean;
+}
+
+const navSections: { title: string; items: NavItem[] }[] = [
+  {
+    title: "Main",
+    items: [{ to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, end: true }],
+  },
+  {
+    title: "Academics",
+    items: [
+      { to: "/dashboard/classes", label: "Classes", icon: GraduationCap },
+      { to: "/dashboard/grades", label: "Grades", icon: Layers },
+      { to: "/dashboard/students", label: "Students", icon: Users },
+    ],
+  },
+  {
+    title: "Content",
+    items: [
+      { to: "/dashboard/folders", label: "Folders", icon: FolderOpen },
+      { to: "/dashboard/content", label: "Content", icon: FileText },
+    ],
+  },
+  {
+    title: "System",
+    items: [{ to: "/dashboard/settings", label: "Settings", icon: Settings }],
+  },
 ];
 
 interface SidebarProps {
   mobileOpen: boolean;
-  tabletExpanded: boolean;
+  collapsed: boolean;
   onCloseMobile: () => void;
-  onToggleTabletExpand: () => void;
+  onToggleCollapse: () => void;
   onLogout: () => void;
 }
 
 export default function Sidebar({
   mobileOpen,
-  tabletExpanded,
+  collapsed,
   onCloseMobile,
-  onToggleTabletExpand,
+  onToggleCollapse,
   onLogout,
 }: SidebarProps) {
   const { user } = useAuth();
 
-  const initials = user?.name
-    ?.split(" ")
-    .map((part) => part[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-
-  const showLabels =
-    tabletExpanded ? true : "max-md:inline md:max-lg:hidden lg:inline";
-
-  const isIconRail = !tabletExpanded;
+  const initials =
+    user?.name
+      ?.split(" ")
+      .map((part) => part[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase() ?? "?";
 
   return (
     <>
+      {/* Mobile overlay */}
       {mobileOpen && (
         <button
           type="button"
           aria-label="Close sidebar overlay"
-          className="fixed inset-0 z-40 bg-slate-900/50 md:hidden"
           onClick={onCloseMobile}
-        />
-      )}
-
-      {tabletExpanded && (
-        <button
-          type="button"
-          aria-label="Close expanded sidebar"
-          className="fixed inset-0 z-40 hidden bg-slate-900/40 md:block lg:hidden"
-          onClick={onToggleTabletExpand}
+          className="fixed inset-0 z-40 bg-slate-950/60 backdrop-blur-sm md:hidden"
         />
       )}
 
       <aside
         className={clsx(
-          "flex h-full flex-col border-r border-slate-200/80 bg-white",
-          "max-md:fixed max-md:inset-y-0 max-md:left-0 max-md:z-50 max-md:w-[280px] max-md:transition-transform max-md:duration-300 max-md:ease-out max-md:shadow-xl",
+          "flex h-full flex-col border-r border-white/[0.06] bg-[#0F172A] text-slate-300",
+          "relative transition-[width] duration-300 ease-in-out",
+          // Mobile: fixed drawer (fixed width, slides in/out)
+          "max-md:fixed max-md:inset-y-0 max-md:left-0 max-md:z-50 max-md:w-[260px] max-md:shadow-2xl max-md:shadow-black/40",
+          "max-md:transition-transform max-md:duration-300 max-md:ease-out",
           mobileOpen ? "max-md:translate-x-0" : "max-md:-translate-x-full",
-          "md:sticky md:top-0 md:z-auto md:h-screen md:translate-x-0 md:shadow-none",
-          tabletExpanded
-            ? "md:fixed md:z-50 md:w-[280px] md:shadow-xl lg:static lg:w-auto lg:shadow-none"
-            : "md:w-full"
+          // Desktop / tablet: sticky, full height, fills its grid column
+          "md:sticky md:top-0 md:z-auto md:h-screen md:w-full md:translate-x-0"
         )}
       >
-        <div className="relative flex h-14 shrink-0 items-center border-b border-slate-100 px-3 lg:px-4 xl:px-5">
-          <div
-            className={clsx(
-              "min-w-0 flex-1",
-              isIconRail ? "max-md:block md:max-lg:hidden lg:block" : "block"
-            )}
-          >
-            <Logo />
-          </div>
+        {/* Ambient top glow */}
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-indigo-500/10 to-transparent" />
 
-          {isIconRail && (
-            <div className="pointer-events-none absolute inset-0 hidden items-center justify-center md:max-lg:flex">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-sm">
-                <GraduationCap size={18} />
-              </div>
-            </div>
-          )}
-
-          <div className="relative z-10 ml-auto flex items-center">
-            <button
-              type="button"
-              onClick={onCloseMobile}
-              className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 md:hidden"
-              aria-label="Close sidebar"
-            >
-              <X size={18} />
-            </button>
-
-            <button
-              type="button"
-              onClick={onToggleTabletExpand}
-              className="hidden rounded-lg p-1.5 text-slate-500 transition hover:bg-slate-100 md:max-lg:block"
-              aria-label={tabletExpanded ? "Collapse sidebar" : "Expand sidebar"}
-            >
-              {tabletExpanded ? <X size={18} /> : <PanelLeftOpen size={18} />}
-            </button>
-          </div>
-        </div>
-
-        <nav className="flex-1 overflow-y-auto px-3 py-4 lg:px-4 lg:py-5">
-          <p
-            className={clsx(
-              "mb-2 px-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400",
-              isIconRail ? "max-md:block md:max-lg:hidden lg:block" : "block"
-            )}
-          >
-            Menu
-          </p>
-
-          <ul className="space-y-1">
-            {navItems.map(({ to, label, icon: Icon, end }) => (
-              <li key={to}>
-                <NavLink
-                  to={to}
-                  end={end}
-                  onClick={() => {
-                    onCloseMobile();
-                    if (tabletExpanded) onToggleTabletExpand();
-                  }}
-                  title={label}
-                  className={({ isActive }) =>
-                    clsx(
-                      "flex items-center gap-3 rounded-xl px-2.5 py-2 text-sm font-medium transition-colors",
-                      isIconRail && "md:max-lg:justify-center md:max-lg:px-2 lg:px-3 lg:py-2.5",
-                      isActive
-                        ? "bg-indigo-50 text-indigo-700"
-                        : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                    )
-                  }
-                >
-                  <Icon size={18} className="shrink-0" strokeWidth={1.75} />
-                  <span className={clsx(typeof showLabels === "string" ? showLabels : "inline")}>
-                    {label}
-                  </span>
-                </NavLink>
-              </li>
-            ))}
-          </ul>
-        </nav>
-
+        {/* Logo / brand */}
         <div
           className={clsx(
-            "shrink-0 border-t border-slate-100 p-3 lg:p-4",
-            isIconRail && "md:max-lg:px-2"
+            "relative flex h-16 shrink-0 items-center gap-2",
+            collapsed ? "px-4 md:justify-center md:px-2" : "px-5"
           )}
         >
-          <div
-            className={clsx(
-              "mb-3 rounded-xl border border-slate-100 bg-slate-50 p-2.5 lg:p-3",
-              isIconRail && "md:max-lg:flex md:max-lg:justify-center md:max-lg:p-2"
-            )}
-          >
-            <div
-              className={clsx(
-                "flex items-center gap-3",
-                isIconRail && "md:max-lg:justify-center"
-              )}
-            >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-xs font-semibold text-indigo-700 lg:h-10 lg:w-10">
-                {initials ?? "?"}
-              </div>
-
-              <div
-                className={clsx(
-                  "min-w-0 flex-1",
-                  isIconRail ? "max-md:block md:max-lg:hidden lg:block" : "block"
-                )}
-              >
-                <p className="truncate text-sm font-semibold text-slate-900">
-                  {user?.name ?? "User"}
-                </p>
-                <p className="truncate text-xs text-slate-500">
-                  {user?.email ?? ""}
-                </p>
-                <span className="mt-1 inline-block rounded-md bg-indigo-100 px-2 py-0.5 text-xs font-medium capitalize text-indigo-700">
-                  {user?.role ?? "member"}
-                </span>
-              </div>
+          <div className="flex items-center gap-3 overflow-hidden">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-600 text-white shadow-lg shadow-indigo-900/40">
+              <GraduationCap size={22} strokeWidth={2} />
+            </div>
+            <div className={clsx("min-w-0 leading-tight", collapsed && "md:hidden")}>
+              <p className="truncate text-sm font-bold tracking-tight text-white">School CMS</p>
+              <p className="truncate text-xs text-slate-400">Content Portal</p>
             </div>
           </div>
 
-          <Button
+          {/* Collapse toggle (tablet/desktop, expanded) */}
+          <button
             type="button"
-            onClick={onLogout}
-            title="Logout"
+            onClick={onToggleCollapse}
             className={clsx(
-              "!h-9 gap-2 border border-slate-200 !bg-white !from-white !to-white text-sm font-medium !text-slate-700 shadow-sm hover:!-translate-y-0 hover:bg-slate-50 hover:shadow-sm lg:!h-10",
-              isIconRail ? "max-md:!w-full md:max-lg:!w-9 md:max-lg:!px-0 lg:!w-full" : "!w-full"
+              "ml-auto hidden rounded-lg p-1.5 text-slate-500 transition-colors hover:bg-white/10 hover:text-white md:block",
+              collapsed && "md:hidden"
+            )}
+            aria-label="Collapse sidebar"
+          >
+            <PanelLeftClose size={18} />
+          </button>
+
+          {/* Close (mobile) */}
+          <button
+            type="button"
+            onClick={onCloseMobile}
+            className="ml-auto rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-white/10 hover:text-white md:hidden"
+            aria-label="Close sidebar"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Expand toggle (collapsed) */}
+        {collapsed && (
+          <button
+            type="button"
+            onClick={onToggleCollapse}
+            className="relative mx-auto mb-1 hidden rounded-lg p-1.5 text-slate-500 transition-colors hover:bg-white/10 hover:text-white md:block"
+            aria-label="Expand sidebar"
+          >
+            <PanelLeftOpen size={18} />
+          </button>
+        )}
+
+        {/* Navigation */}
+        <nav
+          className={clsx(
+            "relative flex-1 space-y-6 overflow-y-auto py-5",
+            collapsed ? "px-3 md:px-2.5" : "px-4"
+          )}
+        >
+          {navSections.map((section) => (
+            <div key={section.title}>
+              <p
+                className={clsx(
+                  "mb-2 px-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500",
+                  collapsed && "md:hidden"
+                )}
+              >
+                {section.title}
+              </p>
+
+              <ul className="space-y-1">
+                {section.items.map(({ to, label, icon: Icon, end }) => (
+                  <li key={to}>
+                    <NavLink
+                      to={to}
+                      end={end}
+                      onClick={onCloseMobile}
+                      title={label}
+                      className={({ isActive }) =>
+                        clsx(
+                          "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
+                          collapsed && "md:justify-center md:px-0",
+                          isActive
+                            ? "bg-gradient-to-r from-indigo-500 to-blue-600 text-white shadow-lg shadow-indigo-600/30 ring-1 ring-inset ring-white/10"
+                            : "text-slate-400 hover:bg-white/[0.06] hover:text-white"
+                        )
+                      }
+                    >
+                      {({ isActive }) => (
+                        <>
+                          <span
+                            className={clsx(
+                              "absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-white/80 transition-opacity duration-200",
+                              isActive && !collapsed ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          <Icon
+                            size={18}
+                            strokeWidth={1.9}
+                            className="shrink-0 transition-transform duration-200 group-hover:scale-110"
+                          />
+                          <span className={clsx("truncate", collapsed && "md:hidden")}>{label}</span>
+                        </>
+                      )}
+                    </NavLink>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </nav>
+
+        {/* Bottom profile card */}
+        <div className={clsx("relative shrink-0 p-3", collapsed && "md:px-2.5")}>
+          <div
+            className={clsx(
+              "rounded-2xl bg-white/[0.04] ring-1 ring-white/10 backdrop-blur-sm transition-all duration-200",
+              collapsed ? "p-2 md:p-2" : "p-2.5"
             )}
           >
-            <LogOut size={16} />
-            <span
-              className={clsx(
-                isIconRail ? "max-md:inline md:max-lg:hidden lg:inline" : "inline"
-              )}
-            >
-              Logout
-            </span>
-          </Button>
+            <div className={clsx("flex items-center gap-3", collapsed && "md:flex-col md:gap-2")}>
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 text-xs font-semibold text-white shadow-md shadow-indigo-900/40">
+                {initials}
+              </div>
+
+              <div className={clsx("min-w-0 flex-1", collapsed && "md:hidden")}>
+                <p className="truncate text-sm font-semibold text-white">{user?.name ?? "User"}</p>
+                <p className="truncate text-xs capitalize text-slate-400">
+                  {user?.role?.toLowerCase() ?? "member"}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={onLogout}
+                title="Logout"
+                aria-label="Logout"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-red-500/15 hover:text-red-400"
+              >
+                <LogOut size={16} />
+              </button>
+            </div>
+          </div>
         </div>
       </aside>
     </>

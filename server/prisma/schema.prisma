@@ -29,6 +29,7 @@ model School {
   grades          Grade[]
   folders         Folder[]
   activationCodes ActivationCode[]
+  activities      Activity[]
 }
 
 model ActivationCode {
@@ -61,6 +62,7 @@ model User {
   folders     Folder[]
   contents    Content[]
   assignments StaffAssignment[]
+  activities  Activity[]
 
   createdAt DateTime @default(now())
 }
@@ -151,4 +153,20 @@ model StaffAssignment {
   class       ClassSection @relation(fields: [classId], references: [id], onDelete: Cascade)
 
   assignedAt  DateTime @default(now())
+}
+
+model Activity {
+  id          String   @id @default(cuid())
+  type        String
+  title       String
+  description String
+  metadata    String?
+
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  schoolId    String
+  school      School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
 }

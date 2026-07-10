@@ -3,6 +3,7 @@ import {
   FileText,
   FileVideo,
   AlignLeft,
+  Image as ImageIcon,
   ArrowRight,
   Inbox,
 } from "lucide-react";
@@ -15,7 +16,7 @@ interface RecentUploadsProps {
 }
 
 const typeConfig = {
-  PDF: { icon: FileText, label: "PDF", className: "bg-rose-50 text-rose-600" },
+  PDF: { icon: FileText, label: "PDF", className: "bg-red-50 text-red-600" },
   VIDEO: {
     icon: FileVideo,
     label: "Video",
@@ -25,6 +26,11 @@ const typeConfig = {
     icon: AlignLeft,
     label: "Text",
     className: "bg-amber-50 text-amber-600",
+  },
+  IMAGE: {
+    icon: ImageIcon,
+    label: "Image",
+    className: "bg-emerald-50 text-emerald-600",
   },
 };
 
@@ -51,7 +57,7 @@ export default function RecentUploads({
   loading = false,
 }: RecentUploadsProps) {
   return (
-    <div className="rounded-xl border border-slate-200/80 bg-white shadow-sm">
+    <div className="rounded-2xl border border-slate-200 bg-white shadow-sm transition-shadow duration-200 hover:shadow-md">
       <div className="flex items-center justify-between border-b border-slate-100 px-6 py-5">
         <div>
           <h3 className="text-base font-semibold text-slate-900">

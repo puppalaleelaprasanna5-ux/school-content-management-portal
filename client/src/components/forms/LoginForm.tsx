@@ -3,7 +3,6 @@ import { Eye, EyeOff, GraduationCap } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
-import Card from "../ui/Card";
 import Input from "../ui/Input";
 import Button from "../ui/Button";
 
@@ -40,10 +39,10 @@ export default function LoginForm() {
       toast.success("Login Successful");
 
       navigate("/dashboard");
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
       toast.error(
-        err?.response?.data?.message ||
-        "Invalid email or password."
+        error?.response?.data?.message || "Invalid email or password."
       );
     } finally {
       setLoading(false);
@@ -51,125 +50,94 @@ export default function LoginForm() {
   }
 
   return (
-    <Card>
-
-      {/* Logo */}
-
-      <div className="mb-8 flex justify-center">
-        <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-indigo-600 to-purple-600 shadow-xl">
-          <GraduationCap
-            className="text-white"
-            size={38}
-          />
+    <div className="rounded-3xl bg-white p-8 shadow-xl shadow-slate-300/30 ring-1 ring-slate-200/70 sm:p-10">
+      {/* Logo (mobile / brand mark) */}
+      <div className="mb-8 flex flex-col items-center text-center">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-600 text-white shadow-lg shadow-indigo-500/30">
+          <GraduationCap size={28} />
         </div>
-      </div>
-
-      {/* Heading */}
-
-      <div className="mb-10 text-center">
-        <h1 className="text-4xl font-extrabold text-slate-900">
-          Welcome Back
+        <h1 className="mt-5 text-2xl font-bold tracking-tight text-slate-900">
+          Welcome back
         </h1>
-
-        <p className="mt-3 text-lg text-slate-500">
-          Login to continue
+        <p className="mt-1.5 text-sm text-slate-500">
+          Sign in to continue to your dashboard
         </p>
       </div>
 
-      {/* Form */}
-
-      <form
-        onSubmit={handleLogin}
-        className="space-y-7"
-      >
+      <form onSubmit={handleLogin} className="space-y-5">
         {/* Email */}
-
         <div>
-          <label className="mb-2 block text-sm font-semibold text-slate-700">
-            Email Address
+          <label
+            htmlFor="email"
+            className="mb-1.5 block text-sm font-medium text-slate-700"
+          >
+            Email address
           </label>
-
           <Input
+            id="email"
             type="email"
-            placeholder="Enter your email"
+            placeholder="you@school.com"
             value={email}
-            onChange={(e) =>
-              setEmail(e.target.value)
-            }
+            onChange={(e) => setEmail(e.target.value)}
           />
         </div>
 
         {/* Password */}
-
         <div>
-          <label className="mb-2 block text-sm font-semibold text-slate-700">
-            Password
-          </label>
-
+          <div className="mb-1.5 flex items-center justify-between">
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-slate-700"
+            >
+              Password
+            </label>
+            <Link
+              to="/activate"
+              className="text-sm font-semibold text-indigo-600 transition-colors hover:text-indigo-700"
+            >
+              Activate school
+            </Link>
+          </div>
           <div className="relative">
             <Input
-              type={
-                showPassword
-                  ? "text"
-                  : "password"
-              }
+              id="password"
+              type={showPassword ? "text" : "password"}
               placeholder="Enter your password"
               value={password}
-              onChange={(e) =>
-                setPassword(e.target.value)
-              }
-              className="pr-14"
+              onChange={(e) => setPassword(e.target.value)}
+              className="pr-11"
             />
-
             <button
               type="button"
-              onClick={() =>
-                setShowPassword(!showPassword)
-              }
-              className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-indigo-600"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-indigo-600"
+              aria-label={showPassword ? "Hide password" : "Show password"}
             >
-              {showPassword ? (
-                <EyeOff size={20} />
-              ) : (
-                <Eye size={20} />
-              )}
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           </div>
         </div>
 
-        {/* Remember */}
-
-        <div className="flex items-center justify-between">
-          <label className="flex cursor-pointer items-center gap-3 text-sm text-slate-600">
-            <input
-              type="checkbox"
-              checked={remember}
-              onChange={(e) =>
-                setRemember(e.target.checked)
-              }
-              className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-            />
-
-            Remember Me
-          </label>
-
-          <Link
-            to="/activate"
-            className="text-sm font-semibold text-indigo-600 hover:text-indigo-700"
-          >
-            Activate School
-          </Link>
-        </div>
-
-        {/* Button */}
+        {/* Remember me */}
+        <label className="flex cursor-pointer items-center gap-2.5 text-sm font-medium text-slate-600">
+          <input
+            type="checkbox"
+            checked={remember}
+            onChange={(e) => setRemember(e.target.checked)}
+            className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-0"
+          />
+          Remember me
+        </label>
 
         <Button
           loading={loading}
           type="submit"
+          size="lg"
+          className="w-full"
         >
-          Sign In
+          Sign in
         </Button>
       </form>
-    </Card>
+    </div>
   );
 }

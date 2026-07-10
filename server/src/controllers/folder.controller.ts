@@ -15,7 +15,12 @@ export const createFolder = async (
   res: Response
 ): Promise<void> => {
   try {
-    const result = await createFolderService(req.body);
+    const user = (req as any).user;
+    const result = await createFolderService({
+      ...req.body,
+      schoolId: user.schoolId,
+      createdById: user.id,
+    });
 
     res.status(201).json(result);
   } catch (error: any) {
@@ -28,7 +33,7 @@ export const createFolder = async (
 
 // Get All Folders
 export const getFolders = async (
-  req: Request,
+  _req: Request,
   res: Response
 ): Promise<void> => {
   try {
@@ -61,7 +66,7 @@ export const getFolderById = async (
 };
 
 export const getFolderTree = async (
-  req: Request,
+  _req: Request,
   res: Response
 ): Promise<void> => {
   try {
@@ -84,7 +89,7 @@ export const updateFolder = async (
   try {
     const result = await updateFolderService(
       String(req.params.id),
-      req.body.name
+      req.body
     );
 
     res.status(200).json(result);

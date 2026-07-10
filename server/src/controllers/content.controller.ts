@@ -13,6 +13,7 @@ export const createContent = async (
   res: Response
 ): Promise<void> => {
   try {
+    const user = (req as any).user;
     const file = req.file;
 
     const result = await createContentService({
@@ -20,7 +21,7 @@ export const createContent = async (
       description: req.body.description,
       type: req.body.type,
       folderId: req.body.folderId,
-      uploadedById: req.body.uploadedById,
+      uploadedById: user.id,
       textContent: req.body.textContent,
       filePath: file ? file.path : undefined,
     });
@@ -35,7 +36,7 @@ export const createContent = async (
 };
 
 export const getContents = async (
-  req: Request,
+  _req: Request,
   res: Response
 ): Promise<void> => {
   try {
@@ -73,11 +74,16 @@ export const updateContent = async (
   res: Response
 ): Promise<void> => {
   try {
+    const file = req.file;
+
     const result = await updateContentService(
       String(req.params.id),
-      req.body.title,
-      req.body.description,
-      req.body.textContent
+      {
+        title: req.body.title,
+        description: req.body.description,
+        textContent: req.body.textContent,
+        filePath: file ? file.path : undefined,
+      }
     );
 
     res.status(200).json(result);

@@ -27,7 +27,7 @@ export const createGrade = async (
 
 // Get All Grades
 export const getGrades = async (
-  req: Request,
+  _req: Request,
   res: Response
 ): Promise<void> => {
   try {

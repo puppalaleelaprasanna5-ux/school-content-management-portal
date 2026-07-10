@@ -27,7 +27,7 @@ export const createClass = async (
 
 // Get All Classes
 export const getClasses = async (
-  req: Request,
+  _req: Request,
   res: Response
 ): Promise<void> => {
   try {

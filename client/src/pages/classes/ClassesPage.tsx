@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo } from "react";
-import { Plus, Pencil, Trash2, Search, GraduationCap, Inbox, ArrowUpDown } from "lucide-react";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { Plus, Pencil, Trash2, GraduationCap, Inbox, ArrowUpDown } from "lucide-react";
 import clsx from "clsx";
 
 import api from "../../services/api";
@@ -7,6 +7,11 @@ import Table from "../../components/ui/Table";
 import Modal from "../../components/ui/Modal";
 import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
+import Badge from "../../components/ui/Badge";
+import Select from "../../components/ui/Select";
+import PageHeader from "../../components/ui/PageHeader";
+import EmptyState from "../../components/ui/EmptyState";
+import SearchBox from "../../components/ui/SearchBox";
 import { useAuth } from "../../context/AuthContext";
 
 interface Grade {
@@ -47,13 +52,8 @@ export default function ClassesPage() {
   const [deleteConfirm, setDeleteConfirm] = useState<Class | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  // Fetch data
-  useEffect(() => {
-    fetchClasses();
-    fetchGrades();
-  }, []);
-
-  const fetchClasses = async () => {
+  // Fetch data functions
+  const fetchClasses = useCallback(async () => {
     try {
       const res = await api.get("/classes");
       setClasses(res.data.data || []);
@@ -62,16 +62,21 @@ export default function ClassesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const fetchGrades = async () => {
+  const fetchGrades = useCallback(async () => {
     try {
       const res = await api.get("/grades");
       setGrades(res.data.data || []);
     } catch (error) {
       console.error("Failed to fetch grades:", error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchClasses();
+    fetchGrades();
+  }, [fetchClasses, fetchGrades]);
 
   // Filter and sort classes
   const filteredClasses = useMemo(() => {
@@ -164,7 +169,7 @@ export default function ClassesPage() {
         <button
           type="button"
           onClick={() => handleSort("name")}
-          className="flex items-center gap-2 hover:text-slate-700 transition-colors"
+          className="flex items-center gap-2 transition-colors hover:text-slate-700"
         >
           Class Name
           {sortField === "name" && (
@@ -184,120 +189,101 @@ export default function ClassesPage() {
     {
       key: "grade",
       header: "Grade",
-      cell: (item: Class) => (
-        <span className="inline-flex rounded-md bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
-          {item.grade.name}
-        </span>
+      cell: (item: Class) => <Badge tone="indigo">{item.grade?.name ?? "No Grade"}</Badge>,
+    },
+    {
+      key: "status",
+      header: "Status",
+      cell: () => (
+        <Badge tone="emerald" dot>
+          Active
+        </Badge>
       ),
     },
     {
       key: "actions",
       header: "",
-      cell: (item: Class) => (
-        <div className="flex items-center gap-2">
-          {isAdmin && (
-            <>
-              <button
-                type="button"
-                onClick={() => openModal(item)}
-                className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
-                aria-label="Edit class"
-              >
-                <Pencil size={16} />
-              </button>
-              <button
-                type="button"
-                onClick={() => setDeleteConfirm(item)}
-                className="rounded-lg p-1.5 text-slate-400 transition hover:bg-red-50 hover:text-red-600"
-                aria-label="Delete class"
-              >
-                <Trash2 size={16} />
-              </button>
-            </>
-          )}
-        </div>
-      ),
+      cell: (item: Class) =>
+        isAdmin ? (
+          <div className="flex items-center justify-end gap-1">
+            <button
+              type="button"
+              onClick={() => openModal(item)}
+              className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+              aria-label={`Edit ${item.name}`}
+            >
+              <Pencil size={16} />
+            </button>
+            <button
+              type="button"
+              onClick={() => setDeleteConfirm(item)}
+              className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
+              aria-label={`Delete ${item.name}`}
+            >
+              <Trash2 size={16} />
+            </button>
+          </div>
+        ) : null,
       className: "text-right",
     },
   ];
 
-  // Empty state
   const emptyState = (
-    <div className="flex flex-col items-center justify-center py-14 text-center">
-      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 text-slate-400">
-        <Inbox size={22} />
-      </div>
-      <p className="mt-4 text-sm font-medium text-slate-900">No classes found</p>
-      <p className="mt-1 max-w-xs text-sm text-slate-500">
-        {searchQuery || selectedGrade !== "all"
-          ? "Try adjusting your search or filters"
+    <EmptyState
+      icon={Inbox}
+      title="No classes found"
+      description={
+        searchQuery || selectedGrade !== "all"
+          ? "Try adjusting your search or filters."
           : isAdmin
-          ? "Create your first class to get started"
-          : "No classes have been added yet"}
-      </p>
-      {isAdmin && !searchQuery && selectedGrade === "all" && (
-        <button
-          type="button"
-          onClick={() => openModal()}
-          className="mt-5 inline-flex items-center gap-1 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-700"
-        >
-          <Plus size={16} />
-          Add class
-        </button>
-      )}
-    </div>
+          ? "Create your first class to get started."
+          : "No classes have been added yet."
+      }
+      action={
+        isAdmin && !searchQuery && selectedGrade === "all" ? (
+          <Button type="button" onClick={() => openModal()}>
+            <Plus size={18} />
+            Add class
+          </Button>
+        ) : undefined
+      }
+    />
   );
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6">
-      {/* Header */}
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
-            Classes
-          </h2>
-          <p className="mt-2 text-sm text-slate-500">
-            Manage class sections across all grades
-          </p>
-        </div>
+      {/* Top toolbar */}
+      <PageHeader
+        title="Classes"
+        subtitle="Manage class sections across all grades"
+        actions={
+          isAdmin && (
+            <Button type="button" onClick={() => openModal()}>
+              <Plus size={18} />
+              Add Class
+            </Button>
+          )
+        }
+      />
 
-        {isAdmin && (
-          <Button
-            type="button"
-            onClick={() => openModal()}
-            className="!h-10 !w-auto !px-4 sm:!h-12 sm:!px-5"
-          >
-            <Plus size={18} className="mr-2" />
-            Add Class
-          </Button>
-        )}
-      </header>
+      {/* Search + filters */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <SearchBox
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Search classes…"
+          className="w-full sm:max-w-sm"
+        />
 
-      {/* Filters */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative flex-1 max-w-sm">
-          <Search
-            size={16}
-            className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
-          />
-          <input
-            type="search"
-            placeholder="Search classes..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50/80 pl-10 pr-4 text-sm text-slate-700 placeholder:text-slate-400 transition focus:border-indigo-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-100"
-          />
-        </div>
-
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <label htmlFor="grade-filter" className="text-sm font-medium text-slate-600">
-            Grade:
+            Grade
           </label>
-          <select
+          <Select
             id="grade-filter"
             value={selectedGrade}
             onChange={(e) => setSelectedGrade(e.target.value)}
-            className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 transition focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+            wrapperClassName="w-full sm:w-48"
           >
             <option value="all">All Grades</option>
             {grades.map((grade) => (
@@ -305,17 +291,12 @@ export default function ClassesPage() {
                 {grade.name}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
       </div>
 
-      {/* Table */}
-      <Table
-        columns={columns}
-        data={filteredClasses}
-        emptyState={emptyState}
-        loading={loading}
-      />
+      {/* Modern table (rounded container, sticky header, hover rows, pagination) */}
+      <Table columns={columns} data={filteredClasses} emptyState={emptyState} loading={loading} />
 
       {/* Add/Edit Modal */}
       <Modal
@@ -325,25 +306,16 @@ export default function ClassesPage() {
         size="sm"
         footer={
           <>
-            <button
-              type="button"
-              onClick={closeModal}
-              className="rounded-xl px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100"
-            >
+            <Button type="button" onClick={closeModal} variant="secondary" size="sm">
               Cancel
-            </button>
-            <Button
-              type="submit"
-              onClick={handleSubmit}
-              loading={submitting}
-              className="!h-10 !w-auto !px-5"
-            >
+            </Button>
+            <Button type="submit" onClick={handleSubmit} loading={submitting} size="sm">
               {editingClass ? "Save Changes" : "Create Class"}
             </Button>
           </>
         }
       >
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label htmlFor="class-name" className="mb-1.5 block text-sm font-medium text-slate-700">
               Class Name
@@ -362,11 +334,11 @@ export default function ClassesPage() {
             <label htmlFor="grade-select" className="mb-1.5 block text-sm font-medium text-slate-700">
               Grade
             </label>
-            <select
+            <Select
               id="grade-select"
               value={formData.gradeId}
               onChange={(e) => setFormData({ ...formData, gradeId: e.target.value })}
-              className="h-14 w-full rounded-2xl border border-slate-300 bg-white px-5 text-[15px] text-slate-700 transition-all duration-200 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
+              wrapperClassName="w-full"
               required
             >
               <option value="">Select a grade</option>
@@ -375,7 +347,7 @@ export default function ClassesPage() {
                   {grade.name}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
         </form>
       </Modal>
@@ -388,33 +360,23 @@ export default function ClassesPage() {
         size="sm"
         footer={
           <>
-            <button
-              type="button"
-              onClick={() => setDeleteConfirm(null)}
-              className="rounded-xl px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100"
-            >
+            <Button type="button" onClick={() => setDeleteConfirm(null)} variant="secondary" size="sm">
               Cancel
-            </button>
-            <button
-              type="button"
-              onClick={handleDelete}
-              disabled={deleting}
-              className={clsx(
-                "flex h-10 items-center justify-center rounded-xl bg-red-600 px-5 text-sm font-medium text-white shadow-lg transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60",
-                deleting && "cursor-wait"
-              )}
-            >
-              {deleting ? "Deleting..." : "Delete"}
-            </button>
+            </Button>
+            <Button type="button" onClick={handleDelete} disabled={deleting} variant="danger" size="sm">
+              {deleting ? "Deleting…" : "Delete"}
+            </Button>
           </>
         }
       >
         <div className="space-y-3">
           <p className="text-sm text-slate-600">
-            Are you sure you want to delete <span className="font-semibold text-slate-900">{deleteConfirm?.name}</span>?
+            Are you sure you want to delete{" "}
+            <span className="font-semibold text-slate-900">{deleteConfirm?.name}</span>?
           </p>
           <p className="text-xs text-slate-500">
-            This action cannot be undone. All content and folders associated with this class will also be affected.
+            This action cannot be undone. All content and folders associated with this class will also
+            be affected.
           </p>
         </div>
       </Modal>

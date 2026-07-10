@@ -92,7 +92,7 @@ export const getFolderByIdService = async (id: string) => {
 // Rename Folder
 export const updateFolderService = async (
   id: string,
-  name: string
+  data: { name?: string; gradeId?: string; classId?: string }
 ) => {
   const folder = await prisma.folder.findUnique({
     where: {
@@ -109,7 +109,9 @@ export const updateFolderService = async (
       id,
     },
     data: {
-      name,
+      ...(data.name && { name: data.name }),
+      ...(data.gradeId && { gradeId: data.gradeId }),
+      ...(data.classId && { classId: data.classId }),
     },
   });
 
