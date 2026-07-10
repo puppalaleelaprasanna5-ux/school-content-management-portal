@@ -5,7 +5,7 @@ export const TOKEN_KEY = "scms_token"
 /** Base URL of the existing Express backend (override with VITE_API_URL). */
 const BASE_URL =
   (import.meta.env.VITE_API_URL as string | undefined) ??
-  "http://localhost:5000/api"
+  "https://school-content-management-portal.onrender.com/api"
 
 export const api = axios.create({ baseURL: BASE_URL })
 

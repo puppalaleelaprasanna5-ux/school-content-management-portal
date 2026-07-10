@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">School Content Management Portal</string>
+    <string name="title_activity_main">School Content Management Portal</string>
+    <string name="package_name">com.schoolcms.portal</string>
+    <string name="custom_url_scheme">com.schoolcms.portal</string>
+</resources>
