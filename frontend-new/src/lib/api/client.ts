@@ -10,13 +10,17 @@ export const STUDENT_TOKEN_KEY = "scms_student_token"
  * under `/student/*`; everything else is the admin app. Keeping them in
  * separate slots means a logged-in admin can never leak into a student view
  * (and vice versa) even within the same browser.
+ *
+ * NOTE: match `/student` exactly or `/student/…` — a plain `startsWith("/student")`
+ * also matches the admin `/students` page, which would make it read the empty
+ * student slot and send requests with no Authorization header.
  */
 export function activeTokenKey(): string {
-  if (
-    typeof window !== "undefined" &&
-    window.location.pathname.startsWith("/student")
-  ) {
-    return STUDENT_TOKEN_KEY
+  if (typeof window !== "undefined") {
+    const path = window.location.pathname
+    if (path === "/student" || path.startsWith("/student/")) {
+      return STUDENT_TOKEN_KEY
+    }
   }
   return TOKEN_KEY
 }
