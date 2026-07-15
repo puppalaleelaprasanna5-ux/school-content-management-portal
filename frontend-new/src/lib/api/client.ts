@@ -51,10 +51,31 @@ export function fileUrl(filePath: string): string {
 
 // Attach the bearer token to every request (student or admin slot by route).
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem(activeTokenKey())
+  const key = activeTokenKey()
+  const token = localStorage.getItem(key)
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
+
+  // TEMP DEBUG — remove after diagnosis. Traces exactly why (or whether) the
+  // Authorization header is attached. JWTs are redacted to length + prefix so
+  // the raw credential is never printed to the console.
+  const redact = (t: string | null) =>
+    t ? `present (len=${t.length}, "${t.slice(0, 12)}…")` : "MISSING (null)"
+  // eslint-disable-next-line no-console
+  console.log(
+    `[api→] ${config.method?.toUpperCase()} ${(config.baseURL ?? "") + (config.url ?? "")}`,
+    {
+      pathname:
+        typeof window !== "undefined" ? window.location.pathname : "(no window)",
+      activeTokenKey: key,
+      scms_token: redact(localStorage.getItem(TOKEN_KEY)),
+      scms_student_token: redact(localStorage.getItem(STUDENT_TOKEN_KEY)),
+      selectedToken: redact(token),
+      authorizationAttached: !!config.headers.Authorization,
+    }
+  )
+
   return config
 })
 
