@@ -40,6 +40,8 @@ export const authApi = {
 
 export const gradesApi = {
   list: () => api.get<ApiList<Grade>>("/grades").then((r) => r.data.data),
+  getById: (id: string) =>
+    api.get<ApiItem<Grade>>(`/grades/${id}`).then((r) => r.data.data),
   create: (name: string, schoolId: string) =>
     api.post<ApiItem<Grade>>("/grades", { name, schoolId }).then((r) => r.data.data),
   update: (id: string, name: string) =>
@@ -53,6 +55,8 @@ export const gradesApi = {
 export const classesApi = {
   list: () =>
     api.get<ApiList<ClassSection>>("/classes").then((r) => r.data.data),
+  getById: (id: string) =>
+    api.get<ApiItem<ClassSection>>(`/classes/${id}`).then((r) => r.data.data),
   create: (name: string, gradeId: string) =>
     api
       .post<ApiItem<ClassSection>>("/classes", { name, gradeId })
@@ -103,6 +107,8 @@ export interface FolderCreateInput {
 
 export const foldersApi = {
   list: () => api.get<ApiList<Folder>>("/folders").then((r) => r.data.data),
+  getById: (id: string) =>
+    api.get<ApiItem<Folder>>(`/folders/${id}`).then((r) => r.data.data),
   create: (input: FolderCreateInput) =>
     api.post<ApiItem<Folder>>("/folders", input).then((r) => r.data.data),
   update: (id: string, name: string) =>
@@ -115,6 +121,8 @@ export const foldersApi = {
 
 export const contentApi = {
   list: () => api.get<ApiList<Content>>("/content").then((r) => r.data.data),
+  getById: (id: string) =>
+    api.get<ApiItem<Content>>(`/content/${id}`).then((r) => r.data.data),
   /** Multipart create — the browser sets the boundary automatically. */
   create: (form: FormData) =>
     api.post<ApiItem<Content>>("/content", form).then((r) => r.data.data),

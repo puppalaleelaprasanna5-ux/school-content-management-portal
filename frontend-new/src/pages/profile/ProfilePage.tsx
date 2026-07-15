@@ -33,9 +33,12 @@ export function ProfilePage() {
   const { user } = useAuth()
   const navigate = useNavigate()
 
-  const name = user?.name ?? "School Admin"
-  const email = user?.email ?? "admin@school.com"
-  const role = user?.role ?? "ADMIN"
+  // Identity comes entirely from the authenticated backend user.
+  if (!user) return null
+
+  const name = user.name
+  const email = user.email
+  const role = user.role
   const roleLabel = roleLabels[role]
 
   const details = [

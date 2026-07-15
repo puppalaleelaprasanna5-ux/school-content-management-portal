@@ -16,6 +16,12 @@ import { ActivatePage } from "@/pages/auth/ActivatePage"
 import { ForgotPassword } from "@/pages/auth/ForgotPassword"
 import { Toaster } from "@/components/ui/toaster"
 
+// Student portal pages (default exports)
+import StudentLogin from "@/pages/student/Login"
+import StudentDashboard from "@/pages/student/Dashboard"
+import FolderBrowser from "@/pages/student/FolderBrowser"
+import ContentViewer from "@/pages/student/ContentViewer"
+
 /** Authenticated app shell — sidebar + navbar + routed page content. */
 function ProtectedLayout() {
   return (
@@ -37,7 +43,13 @@ function App() {
           <Route path="/activate" element={<ActivatePage />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
 
-          {/* Protected */}
+          {/* Student portal (standalone, full-screen — no admin layout) */}
+          <Route path="/student/login" element={<StudentLogin />} />
+          <Route path="/student/dashboard" element={<StudentDashboard />} />
+          <Route path="/student/folder/:id" element={<FolderBrowser />} />
+          <Route path="/student/content/:id" element={<ContentViewer />} />
+
+          {/* Protected (admin) */}
           <Route element={<ProtectedLayout />}>
             <Route path="/" element={<DashboardPage />} />
             <Route path="/grades" element={<GradesPage />} />
@@ -47,8 +59,10 @@ function App() {
             <Route path="/content" element={<ContentPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/profile" element={<ProfilePage />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
+
+          {/* Catch-all — MUST stay last so it never overrides the routes above */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         <Toaster />
       </AuthProvider>

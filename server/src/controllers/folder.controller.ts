@@ -33,11 +33,11 @@ export const createFolder = async (
 
 // Get All Folders
 export const getFolders = async (
-  _req: Request,
+  req: Request,
   res: Response
 ): Promise<void> => {
   try {
-    const result = await getFoldersService();
+    const result = await getFoldersService((req as any).user);
 
     res.status(200).json(result);
   } catch (error: any) {
@@ -54,7 +54,10 @@ export const getFolderById = async (
   res: Response
 ): Promise<void> => {
   try {
-    const result = await getFolderByIdService(String(req.params.id));
+    const result = await getFolderByIdService(
+      String(req.params.id),
+      (req as any).user
+    );
 
     res.status(200).json(result);
   } catch (error: any) {

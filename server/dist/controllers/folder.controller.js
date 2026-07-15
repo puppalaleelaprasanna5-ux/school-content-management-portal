@@ -18,9 +18,9 @@ export const createFolder = async (req, res) => {
     }
 };
 // Get All Folders
-export const getFolders = async (_req, res) => {
+export const getFolders = async (req, res) => {
     try {
-        const result = await getFoldersService();
+        const result = await getFoldersService(req.user);
         res.status(200).json(result);
     }
     catch (error) {
@@ -33,7 +33,7 @@ export const getFolders = async (_req, res) => {
 // Get Folder By ID
 export const getFolderById = async (req, res) => {
     try {
-        const result = await getFolderByIdService(String(req.params.id));
+        const result = await getFolderByIdService(String(req.params.id), req.user);
         res.status(200).json(result);
     }
     catch (error) {

@@ -36,11 +36,11 @@ export const createContent = async (
 };
 
 export const getContents = async (
-  _req: Request,
+  req: Request,
   res: Response
 ): Promise<void> => {
   try {
-    const result = await getContentsService();
+    const result = await getContentsService((req as any).user);
 
     res.status(200).json(result);
   } catch (error: any) {
@@ -57,7 +57,8 @@ export const getContentById = async (
 ): Promise<void> => {
   try {
     const result = await getContentByIdService(
-      String(req.params.id)
+      String(req.params.id),
+      (req as any).user
     );
 
     res.status(200).json(result);

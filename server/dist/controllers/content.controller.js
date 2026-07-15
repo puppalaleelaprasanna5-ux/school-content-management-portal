@@ -21,9 +21,9 @@ export const createContent = async (req, res) => {
         });
     }
 };
-export const getContents = async (_req, res) => {
+export const getContents = async (req, res) => {
     try {
-        const result = await getContentsService();
+        const result = await getContentsService(req.user);
         res.status(200).json(result);
     }
     catch (error) {
@@ -35,7 +35,7 @@ export const getContents = async (_req, res) => {
 };
 export const getContentById = async (req, res) => {
     try {
-        const result = await getContentByIdService(String(req.params.id));
+        const result = await getContentByIdService(String(req.params.id), req.user);
         res.status(200).json(result);
     }
     catch (error) {

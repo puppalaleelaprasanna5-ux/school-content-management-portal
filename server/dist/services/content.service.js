@@ -1,4 +1,22 @@
 import prisma from "../config/prisma.js";
+/**
+ * Prisma `where` fragment restricting content to what a student may see:
+ * published items in a folder targeted at their class, or a grade-wide folder
+ * (no class) for their grade. Returns `null` for staff (no filter).
+ */
+const studentContentWhere = (user) => {
+    if (!user || user.role !== "STUDENT")
+        return null;
+    const folderClauses = [];
+    if (user.classId)
+        folderClauses.push({ classId: user.classId });
+    if (user.gradeId)
+        folderClauses.push({ gradeId: user.gradeId, classId: null });
+    return {
+        published: true,
+        folder: { is: { OR: folderClauses.length ? folderClauses : [{ id: "__none__" }] } },
+    };
+};
 // Create PDF / Video / Text Content
 export const createContentService = async (data) => {
     const { title, description, type, folderId, uploadedById, filePath, textContent, } = data;
@@ -33,8 +51,10 @@ export const createContentService = async (data) => {
     };
 };
 // Get All Content
-export const getContentsService = async () => {
+export const getContentsService = async (user) => {
+    const scope = studentContentWhere(user);
     const contents = await prisma.content.findMany({
+        ...(scope ? { where: scope } : {}),
         include: {
             folder: true,
             uploadedBy: true,
@@ -49,8 +69,8 @@ export const getContentsService = async () => {
         data: contents,
     };
 };
-// Get Content By ID
-export const getContentByIdService = async (id) => {
+// Get Content By ID (students may only view published items within their scope)
+export const getContentByIdService = async (id, user) => {
     const content = await prisma.content.findUnique({
         where: {
             id,
@@ -62,6 +82,14 @@ export const getContentByIdService = async (id) => {
     });
     if (!content) {
         throw new Error("Content not found.");
+    }
+    if (user && user.role === "STUDENT") {
+        const f = content.folder;
+        const inScope = (!!user.classId && f?.classId === user.classId) ||
+            (!!user.gradeId && f?.gradeId === user.gradeId && f?.classId === null);
+        if (!content.published || !inScope) {
+            throw new Error("Content not found.");
+        }
     }
     return {
         success: true,

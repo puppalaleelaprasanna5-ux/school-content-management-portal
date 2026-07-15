@@ -1,4 +1,5 @@
 import prisma from "../config/prisma.js";
+import { hashPassword } from "../utils/hash.js";
 // Create Student
 export const createStudentService = async (data) => {
     const { name, email, password, schoolId, gradeId, classId } = data;
@@ -8,11 +9,12 @@ export const createStudentService = async (data) => {
     if (existingUser) {
         throw new Error("User with this email already exists.");
     }
+    const hashedPassword = await hashPassword(password);
     const student = await prisma.user.create({
         data: {
             name,
             email,
-            password,
+            password: hashedPassword,
             role: "STUDENT",
             schoolId,
             gradeId,

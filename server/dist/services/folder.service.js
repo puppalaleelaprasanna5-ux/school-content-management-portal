@@ -1,4 +1,23 @@
 import prisma from "../config/prisma.js";
+/**
+ * Prisma `where` fragment restricting folders to those a student may see:
+ * a folder targeted at their specific class, or a grade-wide folder (no class)
+ * for their grade. Returns `null` when the caller is not a student (no filter).
+ */
+const studentFolderWhere = (user) => {
+    if (!user || user.role !== "STUDENT")
+        return null;
+    const clauses = [];
+    if (user.classId)
+        clauses.push({ classId: user.classId });
+    if (user.gradeId)
+        clauses.push({ gradeId: user.gradeId, classId: null });
+    // A student with no grade/class can see nothing.
+    return { OR: clauses.length ? clauses : [{ id: "__none__" }] };
+};
+/** Whether a single folder is within a student's scope. */
+const folderInStudentScope = (folder, user) => (!!user.classId && folder.classId === user.classId) ||
+    (!!user.gradeId && folder.gradeId === user.gradeId && folder.classId === null);
 // Create Folder
 export const createFolderService = async (data) => {
     const { name, schoolId, createdById, gradeId, classId, parentId, } = data;
@@ -18,9 +37,11 @@ export const createFolderService = async (data) => {
         data: folder,
     };
 };
-// Get All Folders
-export const getFoldersService = async () => {
+// Get All Folders (scoped to the student's grade/class; unrestricted for staff)
+export const getFoldersService = async (user) => {
+    const scope = studentFolderWhere(user);
     const folders = await prisma.folder.findMany({
+        ...(scope ? { where: scope } : {}),
         include: {
             school: true,
             grade: true,
@@ -40,8 +61,14 @@ export const getFoldersService = async () => {
         data: folders,
     };
 };
-// Get Folder By ID
-export const getFolderByIdService = async (id) => {
+// Get Folder By ID.
+// Returns the folder itself, ONLY its direct child folders (by parentId) and
+// ONLY the content belonging to this folder. For students the child/content
+// sets are additionally scoped at the query level to their grade/class and to
+// published items, so no folder from another parent or branch can leak in.
+export const getFolderByIdService = async (id, user) => {
+    const isStudent = !!user && user.role === "STUDENT";
+    const childScope = studentFolderWhere(user); // {OR:[...]} for students, else null
     const folder = await prisma.folder.findUnique({
         where: {
             id,
@@ -51,12 +78,24 @@ export const getFolderByIdService = async (id) => {
             grade: true,
             class: true,
             parent: true,
-            children: true,
-            contents: true,
             createdBy: true,
+            // Direct children only (Prisma `children` = rows whose parentId === id).
+            children: {
+                ...(childScope ? { where: childScope } : {}),
+                orderBy: { name: "asc" },
+            },
+            // Content whose folderId === id only.
+            contents: {
+                ...(isStudent ? { where: { published: true } } : {}),
+                orderBy: { createdAt: "asc" },
+            },
         },
     });
     if (!folder) {
+        throw new Error("Folder not found.");
+    }
+    // A student may not open a folder outside their own grade/class.
+    if (isStudent && !folderInStudentScope(folder, user)) {
         throw new Error("Folder not found.");
     }
     return {
