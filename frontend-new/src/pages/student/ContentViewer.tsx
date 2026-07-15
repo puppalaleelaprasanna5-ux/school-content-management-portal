@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { ChevronLeft, ExternalLink, FileWarning, TriangleAlert } from "lucide-react"
+import {
+  ArrowLeft,
+  ChevronRight,
+  ExternalLink,
+  FileWarning,
+  TriangleAlert,
+} from "lucide-react"
 
 import { contentApi } from "@/lib/api/services"
 import { fileUrl, getErrorMessage } from "@/lib/api/client"
@@ -47,15 +53,57 @@ export function ContentViewer() {
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6 sm:py-10">
-        {/* Back */}
+        {/* Back to the folder this content lives in */}
         <button
           type="button"
-          onClick={() => navigate(-1)}
-          className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium text-slate-500 transition-colors hover:text-indigo-600"
+          onClick={() =>
+            content
+              ? navigate(`/student/folder/${content.folderId}`)
+              : navigate("/student/dashboard")
+          }
+          className="inline-flex items-center gap-1.5 rounded-lg text-sm font-medium text-slate-500 transition-colors hover:text-indigo-600"
         >
-          <ChevronLeft className="size-4" />
-          Back
+          <ArrowLeft className="size-4" />
+          {content ? "Back to Folder" : "Dashboard"}
         </button>
+
+        {/* Breadcrumb: Dashboard > Folder > Title */}
+        {content && (
+          <nav aria-label="Breadcrumb" className="mt-3">
+            <ol className="flex flex-wrap items-center gap-1 text-sm">
+              <li>
+                <button
+                  type="button"
+                  onClick={() => navigate("/student/dashboard")}
+                  className="rounded-md px-1.5 py-0.5 font-medium text-slate-500 transition-colors hover:text-indigo-600"
+                >
+                  Dashboard
+                </button>
+              </li>
+              {content.folder && (
+                <li className="flex items-center gap-1">
+                  <ChevronRight className="size-3.5 text-slate-300" />
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/student/folder/${content.folderId}`)}
+                    className="rounded-md px-1.5 py-0.5 font-medium text-slate-500 transition-colors hover:text-indigo-600"
+                  >
+                    {content.folder.name.trim()}
+                  </button>
+                </li>
+              )}
+              <li className="flex items-center gap-1">
+                <ChevronRight className="size-3.5 text-slate-300" />
+                <span
+                  aria-current="page"
+                  className="rounded-md px-1.5 py-0.5 font-semibold text-slate-900"
+                >
+                  {content.title}
+                </span>
+              </li>
+            </ol>
+          </nav>
+        )}
 
         {loading ? (
           <ViewerSkeleton />

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { motion, type Variants } from "framer-motion"
 import {
+  ArrowLeft,
   ChevronRight,
   FileText,
   Folder,
@@ -80,6 +81,24 @@ export function FolderBrowser() {
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="mx-auto w-full max-w-4xl px-4 py-6 sm:px-6 sm:py-10">
+        {/* Back — to the parent folder for a subfolder, else to the dashboard */}
+        {current && (
+          <button
+            type="button"
+            onClick={() =>
+              navigate(
+                current.parent
+                  ? `/student/folder/${current.parent.id}`
+                  : "/student/dashboard"
+              )
+            }
+            className="mb-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-medium text-slate-500 transition-colors hover:text-indigo-600"
+          >
+            <ArrowLeft className="size-4" />
+            {current.parent ? "Back" : "Dashboard"}
+          </button>
+        )}
+
         {/* Breadcrumb */}
         <Breadcrumb folder={current} onNavigate={navigate} />
 
@@ -172,7 +191,7 @@ function Breadcrumb({
             className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 font-medium text-slate-500 transition-colors hover:text-indigo-600"
           >
             <Home className="size-3.5" />
-            Home
+            Dashboard
           </button>
         </li>
 
