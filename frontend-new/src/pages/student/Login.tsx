@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { useForm } from "react-hook-form"
-import { useNavigate } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { GraduationCap, TriangleAlert } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -139,6 +139,17 @@ export function StudentLogin() {
             </Button>
           </form>
         </div>
+
+        {/* Admin portal */}
+        <p className="mt-6 text-center text-sm text-slate-500">
+          Are you an administrator?{" "}
+          <Link
+            to="/login"
+            className="font-medium text-indigo-600 transition-colors hover:text-indigo-700"
+          >
+            Administrator Login
+          </Link>
+        </p>
       </div>
     </div>
   )

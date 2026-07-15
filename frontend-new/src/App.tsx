@@ -17,6 +17,7 @@ import { ForgotPassword } from "@/pages/auth/ForgotPassword"
 import { Toaster } from "@/components/ui/toaster"
 
 // Student portal pages (default exports)
+import { StudentLayout } from "@/components/layout/StudentLayout"
 import StudentLogin from "@/pages/student/Login"
 import StudentDashboard from "@/pages/student/Dashboard"
 import FolderBrowser from "@/pages/student/FolderBrowser"
@@ -43,11 +44,13 @@ function App() {
           <Route path="/activate" element={<ActivatePage />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
 
-          {/* Student portal (standalone, full-screen — no admin layout) */}
+          {/* Student portal — login is standalone; the rest share StudentLayout */}
           <Route path="/student/login" element={<StudentLogin />} />
-          <Route path="/student/dashboard" element={<StudentDashboard />} />
-          <Route path="/student/folder/:id" element={<FolderBrowser />} />
-          <Route path="/student/content/:id" element={<ContentViewer />} />
+          <Route element={<StudentLayout />}>
+            <Route path="/student/dashboard" element={<StudentDashboard />} />
+            <Route path="/student/folder/:id" element={<FolderBrowser />} />
+            <Route path="/student/content/:id" element={<ContentViewer />} />
+          </Route>
 
           {/* Protected (admin) */}
           <Route element={<ProtectedLayout />}>

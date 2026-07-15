@@ -142,6 +142,17 @@ export function LoginForm() {
           Activate account
         </Link>
       </p>
+
+      {/* Student portal */}
+      <p className="border-t border-slate-100 pt-4 text-center text-sm text-slate-500">
+        Are you a student?{" "}
+        <Link
+          to="/student/login"
+          className="font-medium text-indigo-600 transition-colors hover:text-indigo-700"
+        >
+          Student Login
+        </Link>
+      </p>
     </form>
   )
 }
